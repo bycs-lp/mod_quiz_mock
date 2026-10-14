@@ -368,6 +368,10 @@
   @keyframes tourShake{25%{transform:translateX(-6px);}75%{transform:translateX(6px);}}
   body.tour-on .toast-container,body.tour-on .toast-container *{pointer-events:none;}
   body.tour-on .toast-container{z-index:1310;}
+  .tour-fab{position:fixed;right:20px;bottom:20px;z-index:1250;display:flex;align-items:center;border-radius:999px;box-shadow:0 6px 18px rgba(0,0,0,.25);overflow:hidden;}
+  .tour-fab button{border:0;background:var(--bycs-primary);color:#fff;padding:10px 16px;font-weight:600;}
+  .tour-fab button:hover{background:var(--bycs-primary-dark);}
+  .tour-fab .tf-x{padding:10px 12px;border-left:1px solid rgba(255,255,255,.35);}
   .ctx-label{font-size:11px;font-weight:700;color:#8a90a0;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;}
   .ctx-opt{display:block;width:100%;text-align:left;border:1px solid var(--bycs-line);background:#fff;border-radius:8px;padding:10px 12px;margin-bottom:8px;cursor:pointer;font-size:14px;}
   .ctx-opt.active{border-color:var(--bycs-primary);background:#eaf1fb;font-weight:700;}
@@ -2905,7 +2909,7 @@
     for(var k=0;k<4;k++){ var d=document.createElement('div'); d.className='tour-dim'; d.addEventListener('click',function(e){ e.stopPropagation(); e.preventDefault(); u.pop.classList.remove('shake'); void u.pop.offsetWidth; u.pop.classList.add('shake'); }); document.body.appendChild(d); u.dims.push(d); }
     u.ring=document.createElement('div'); u.ring.className='tour-ring'; document.body.appendChild(u.ring);
     u.pop=document.createElement('div'); u.pop.className='tour-pop'; u.pop.setAttribute('data-noi18n',''); u.pop.setAttribute('role','dialog'); document.body.appendChild(u.pop);
-    u.pop.addEventListener('click',function(e){ var a=e.target.closest('[data-tact]'); if(!a) return; var act=a.dataset.tact; if(act==='next') tNext(); else if(act==='back') tJump(T.i-1); else tEnd(false); });
+    u.pop.addEventListener('click',function(e){ var a=e.target.closest('[data-tact]'); if(!a) return; var act=a.dataset.tact; if(act==='next') tNext(); else if(act==='back') tJump(T.i-1); else if(act==='pause') tPause(); else tEnd(false); });
     T.ui=u; return u; }
   function tShowUi(v){ var u=tUi(); u.dims.concat([u.ring,u.pop]).forEach(function(e){ e.classList.toggle('hidden',!v); }); }
   function tLang(){ return (typeof curLang!=='undefined' && curLang==='en')?'en':'de'; }
@@ -2916,7 +2920,8 @@
       +'<div class="fw-bold mb-1">'+x[0]+'</div><div>'+x[1]+'</div>'
       +(s.c && !miss?'<div class="tp-do"><i class="fa-solid fa-hand-pointer me-1"></i>'+(en?'Click the highlighted element.':'Klicke auf das markierte Element.')+'</div>':'')
       +(miss?'<div class="tp-do">'+(en?'This element is not visible right now – “Next” skips the step.':'Dieses Element ist gerade nicht sichtbar – „Weiter“ überspringt den Schritt.')+'</div>':'')
-      +'<div class="d-flex align-items-center gap-2 mt-3"><button type="button" class="btn btn-link btn-sm p-0 me-auto text-decoration-none" data-tact="end">'+(en?'End tour':'Tour beenden')+'</button>'
+      +'<div class="d-flex align-items-center gap-2 mt-3"><button type="button" class="btn btn-link btn-sm p-0 text-decoration-none" data-tact="end">'+(en?'End tour':'Tour beenden')+'</button>'
+      +'<button type="button" class="btn btn-link btn-sm p-0 me-auto text-decoration-none" data-tact="pause" title="'+(en?'Pause the tour and explore freely':'Tour anhalten und frei umsehen')+'"><i class="fa-solid fa-pause me-1"></i>'+(en?'Pause':'Pausieren')+'</button>'
       +'<button type="button" class="btn btn-outline-secondary btn-sm" data-tact="back"'+(T.i===0?' disabled':'')+'>'+(en?'Back':'Zurück')+'</button>'
       +'<button type="button" class="btn btn-primary btn-sm" data-tact="next">'+(last?(en?'Finish':'Fertig'):(en?'Next':'Weiter'))+'</button></div>';
     u.ring.classList.toggle('click', !!s.c); }
@@ -2951,7 +2956,7 @@
       // Also scroll when something sticky (e.g. the footer) covers the target.
       if(b.top<0 || b.bottom>innerHeight || (h && !T.el.contains(h) && !h.contains(T.el))) T.el.scrollIntoView({block:b.height>innerHeight*0.6?'start':'center'}); }
     tRender(); tShowUi(true); T.busy=false; }
-  function tBegin(){ if(!T.on){ T.on=true; document.body.classList.add('tour-on'); tUi(); requestAnimationFrame(tPos); } T.busy=true; tShowUi(false); }
+  function tBegin(){ tFab(false); if(!T.on){ T.on=true; document.body.classList.add('tour-on'); tUi(); requestAnimationFrame(tPos); } T.busy=true; tShowUi(false); }
   // Restores the state of step i: run the chapter setup, then replay the chapter's steps before i.
   async function tJump(i){ if(i<0) return; tBegin(); var s=TSTEPS[i], ch=TOUR[s.ch];
     await ch.prep();
@@ -2964,8 +2969,15 @@
     if(s.c && T.el){ T.auto=true; await tDo(s,T.el); T.auto=false; await tSleep(150); }
     else if(!s.c && s.on) s.on();
     tGo(T.i+1); }
-  function tEnd(done){ T.on=false; T.busy=false; T.el=null; document.body.classList.remove('tour-on'); tShowUi(false);
+  function tEnd(done){ T.on=false; T.busy=false; T.el=null; document.body.classList.remove('tour-on'); tShowUi(false); tFab(false);
     try{ if(done) localStorage.removeItem('mqTourStep'); }catch(e){} tResumeBtn(); }
+  // Pausing keeps the step; resuming restores the step's page state via tJump.
+  function tPause(){ tEnd(false); tFab(true); }
+  function tFab(show){ try{ if(show) localStorage.setItem('mqTourPaused','1'); else localStorage.removeItem('mqTourPaused'); }catch(e){}
+    var f=tQ('#tourFab'); if(!f){ f=document.createElement('div'); f.id='tourFab'; f.className='tour-fab hidden'; f.setAttribute('data-noi18n',''); document.body.appendChild(f); }
+    var en=tLang()==='en'; f.innerHTML='<button type="button" onclick="tourResume()"><i class="fa-solid fa-play me-2"></i>'+(en?'Resume tour':'Tour fortsetzen')+' <span class="fw-normal small opacity-75">('+(T.i+1)+'/'+TSTEPS.length+')</span></button>'
+      +'<button type="button" class="tf-x" title="'+(en?'End tour':'Tour beenden')+'" onclick="tEnd(false)"><i class="fa-solid fa-xmark"></i></button>';
+    f.classList.toggle('hidden', !show); }
   document.addEventListener('click',function(e){ if(!T.on || T.busy || T.auto) return; var s=TSTEPS[T.i]; if(!s.c || !T.el || e.target.closest('.tour-pop')) return;
     var ok=s.acc ? !!e.target.closest(s.acc) : T.el.contains(e.target); if(!ok) return;
     T.busy=true; setTimeout(function(){ tGo(T.i+1); },60); }, true);
@@ -2974,7 +2986,8 @@
   function tourResume(){ var v=0; try{ v=+localStorage.getItem('mqTourStep')||0; }catch(e){} tJump(Math.min(v,TSTEPS.length-1)); }
   function tourChapter(v){ if(v==='') return; tQ('#tourChap').value=''; tJump(TOUR[+v].start); }
   (function(){ var sel=tQ('#tourChap'); TOUR.forEach(function(ch,ci){ var o=document.createElement('option'); o.value=ci; o.textContent=(ci+1)+'. '+ch.de+' · '+ch.en; sel.appendChild(o); }); tResumeBtn();
-    var sl=setLang; window.setLang=function(l){ sl(l); if(T.on && !T.busy) tRender(); }; })();
+    try{ if(localStorage.getItem('mqTourPaused')){ T.i=Math.min(+localStorage.getItem('mqTourStep')||0,TSTEPS.length-1); tFab(true); } }catch(e){}
+    var sl=setLang; window.setLang=function(l){ sl(l); if(T.on && !T.busy) tRender(); var f=tQ('#tourFab'); if(f && !f.classList.contains('hidden')) tFab(true); }; })();
 
   // ==== Schnellauswahl: Deeplinks (#go-<id>, optional &lang=de) ====
   var QS=[
