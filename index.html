@@ -201,6 +201,8 @@
   .qsec-tog{border:0;background:none;padding:2px 6px;color:var(--bs-secondary-color);}
   .qsec-tog i{transition:transform .15s;}
   .qsection.collapsed .qsec-tog i{transform:rotate(-90deg);}
+  .qsec-pts{color:var(--bycs-muted);}
+  .qsec-pts b{color:var(--bycs-ink);}
   .qpage-lbl,.qpb-ctl{display:flex;align-items:center;gap:10px;font-size:.85rem;color:var(--bycs-muted);}
   .qpage-lbl{margin:16px 0 8px;font-weight:600;}
   .qpage-lbl:first-child{margin-top:0;}
@@ -777,21 +779,23 @@
     <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-2">
       <div class="text-muted small">Fragen: <span id="qcount">0</span> | Aktuell läuft dieser Test</div>
       <div class="d-flex align-items-center gap-3 flex-wrap">
-        <a href="#" id="qSecAllBtn" class="text-decoration-none small hidden" onclick="qSecAllToggle();return false;"><i class="fa-solid fa-angles-up me-1"></i><span>Alle einklappen</span></a>
         <a href="#" class="text-decoration-none small" onclick="showPage('qbank');return false;"><i class="fa-solid fa-book me-1"></i>Fragensammlung öffnen</a>
         <a href="#" class="text-decoration-none small" onclick="showPage('settings');return false;"><i class="fa-solid fa-gear me-1"></i>Beste Bewertung konfigurieren</a>
       </div>
     </div>
-    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+    <div class="d-flex align-items-center flex-wrap gap-2 mb-2">
       <div class="d-flex align-items-center gap-3 flex-wrap">
         <div class="d-flex align-items-center gap-2"><label class="small text-nowrap" for="qPageMode">Seitenumbrüche:</label><select id="qPageMode" class="form-select form-select-sm" style="width:auto" onchange="qPageSet(this.value)"><option value="section" selected>Je Abschnitt eine Seite</option><option value="question">Eine Frage pro Seite</option><option value="all">Alle Fragen auf einer Seite</option><option value="manual">Manuelle Umbrüche</option></select></div>
         <button class="btn btn-secondary btn-sm" onclick="toast('Mehrere Elemente auswählen')">Mehrere Elemente auswählen</button>
         <div class="form-check m-0"><input class="form-check-input" type="checkbox" id="shuffleQ"><label class="form-check-label small" for="shuffleQ">Fragen mischen</label></div>
       </div>
+    </div>
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
       <div class="d-flex align-items-center gap-3 flex-wrap">
         <span class="small">Summe der Punkte: <span id="sumpoints">0,00</span></span>
         <a href="#" class="text-decoration-none small" onclick="openGewModal();return false;"><i class="fa-solid fa-scale-balanced me-1"></i>Gewichtung gegenüber anderen Ergebnissen im Kurs ändern</a>
       </div>
+      <a href="#" id="qSecAllBtn" class="text-decoration-none small hidden" onclick="qSecAllToggle();return false;"><i class="fa-solid fa-angles-up me-1"></i><span>Alle einklappen</span></a>
     </div>
     <div id="qlist"></div>
     <div id="qempty" class="card-soft text-center text-muted py-3" style="border-style:dashed;background:#eef0f3">Noch keine Fragen vorhanden.</div>
@@ -1773,7 +1777,7 @@
     document.getElementById('qcount').textContent='0'; document.getElementById('sumpoints').textContent='0,00'; document.getElementById('qempty').classList.remove('hidden'); qSecAllSync();
     if(mode!=='existing') return; var last='';
     SR.concat(QE_EXTRA).forEach(function(q){
-      if(q.sec!==last){ last=q.sec; var d=document.createElement('div'); d.className='qsection'; d.innerHTML='<div class="d-flex align-items-center gap-2">'+QSEC_TOG+'<input class="form-control form-control-sm fw-bold" style="max-width:360px" value="'+gkEsc(q.sec)+'"><span class="qsec-n small text-muted text-nowrap hidden"></span><i class="fa-solid fa-ellipsis-vertical text-muted ms-auto"></i><i class="fa-solid fa-trash text-muted" style="cursor:pointer" onclick="removeSectionEl(this)"></i></div>'; document.getElementById('qlist').appendChild(d); }
+      if(q.sec!==last){ last=q.sec; var d=document.createElement('div'); d.className='qsection'; d.innerHTML='<div class="d-flex align-items-center gap-2">'+QSEC_TOG+'<input class="form-control form-control-sm fw-bold" style="max-width:360px" value="'+gkEsc(q.sec)+'"><span class="qsec-n small text-muted text-nowrap hidden"></span>'+QSEC_PTS+'<i class="fa-solid fa-ellipsis-vertical text-muted"></i><i class="fa-solid fa-trash text-muted" style="cursor:pointer" onclick="removeSectionEl(this)"></i></div>'; document.getElementById('qlist').appendChild(d); }
       var ok='<i class="fa-solid fa-circle-check"></i> ', ans, sol='<div class="small mt-2"><span class="text-muted"><span>Richtige Antwort</span>:</span> <span class="fw-semibold text-success">';
       if(q.t==='choice') ans=q.opts.map(function(o,i){ return i===q.cor ? '<div class="ans correct">'+ok+'<span>'+o+'</span></div>' : '<div class="ans"><span class="rd"></span> <span>'+o+'</span></div>'; }).join('');
       else if(q.t==='dd') ans='<div class="qe-pairs">'+q.items.map(function(it){ return '<div class="qe-pair"><span class="qe-key">'+it[0]+'</span><i class="fa-solid fa-arrow-right text-muted"></i><span class="qe-val">'+(it[2]||it[1])+'</span></div>'; }).join('')+'</div>';
@@ -1971,12 +1975,17 @@
   function openBank(){ bootstrap.Modal.getOrCreateInstance('#bankModal').show(); }
   function randTab(btn,id){ btn.closest('.nav-tabs').querySelectorAll('.nav-link').forEach(function(x){x.classList.remove('active');}); btn.classList.add('active'); document.getElementById('rand-exist').classList.toggle('hidden', id!=='rand-exist'); document.getElementById('rand-new').classList.toggle('hidden', id!=='rand-new'); }
   function bumpQ(pts){ window.__qc=(window.__qc||0)+1; var qc=document.getElementById('qcount'); if(qc) qc.textContent=window.__qc; window.__pts=(window.__pts||0)+pts; var sp=document.getElementById('sumpoints'); if(sp) sp.textContent=window.__pts.toFixed(2).replace('.',','); qPagesRender(); }
-  function addQCard(title,sub){ document.getElementById('qempty').classList.add('hidden'); var card=document.createElement('div'); card.className='qcard mb-3'; card.innerHTML='<div class="qtools"><i class="fa-solid fa-pen"></i><i class="fa-solid fa-chevron-up"></i><i class="fa-solid fa-chevron-down"></i><i class="fa-solid fa-trash" onclick="removeQ(this)" style="cursor:pointer"></i><i class="fa-solid fa-ellipsis-vertical"></i></div><div class="fw-bold mb-1">'+title+'</div><div class="text-muted small">'+sub+'</div>'; document.getElementById('qlist').appendChild(card); }
+  function addQCard(title,sub){ document.getElementById('qempty').classList.add('hidden'); var card=document.createElement('div'); card.className='qcard mb-3'; card.dataset.pts='5'; card.innerHTML='<div class="qtools"><i class="fa-solid fa-pen"></i><i class="fa-solid fa-chevron-up"></i><i class="fa-solid fa-chevron-down"></i><i class="fa-solid fa-trash" onclick="removeQ(this)" style="cursor:pointer"></i><i class="fa-solid fa-ellipsis-vertical"></i></div><div class="fw-bold mb-1">'+title+'</div><div class="text-muted small">'+sub+'</div>'; document.getElementById('qlist').appendChild(card); }
   function addRandom(){ bootstrap.Modal.getOrCreateInstance('#randomModal').hide(); addQCard('<i class="fa-solid fa-shuffle me-2 text-muted"></i>Zufällig (Standard für Mathematik Kapitel 3) basierend auf Filterbedingung','1 Zufallsfrage · 5,00 Punkte'); bumpQ(5); toast('Zufallsfrage hinzugefügt'); }
   function addFromBank(){ var boxes=document.querySelectorAll('#bankModal .bankq input:checked'); if(!boxes.length){ toast('Bitte mindestens eine Frage auswählen'); return; } boxes.forEach(function(b){ var t=b.parentElement.querySelector('span').childNodes[0].textContent.trim(); addQCard(t,'Aus Fragensammlung · 5,00 Punkte'); bumpQ(5); }); bootstrap.Modal.getOrCreateInstance('#bankModal').hide(); toast(boxes.length+' Frage(n) hinzugefügt'); }
 
   function removeQ(el){ var card=el.closest('.qcard'); if(!card) return; card.remove(); window.__qc=Math.max(0,(window.__qc||0)-1); var qc=document.getElementById('qcount'); if(qc) qc.textContent=window.__qc; window.__pts=Math.max(0,(window.__pts||0)-5); var sp=document.getElementById('sumpoints'); if(sp) sp.textContent=window.__pts.toFixed(2).replace('.',','); if(window.__qc===0){ document.getElementById('qempty').classList.remove('hidden'); } qPagesRender(); toast('Frage entfernt'); }
   var QSEC_TOG='<button type="button" class="qsec-tog" aria-expanded="true" title="Abschnitt ein-/ausklappen" onclick="toggleQSec(this)"><i class="fa-solid fa-chevron-down"></i></button>';
+  var QSEC_PTS='<span class="qsec-pts ms-auto small text-nowrap"><span>Punkte</span>: <b class="qsec-sum">0,00</b></span>';
+  function qCardPts(card){ var i=card.querySelector('.qmeta-input'); return parseFloat(String(i ? i.value : (card.dataset.pts||0)).replace(',','.'))||0; }
+  function qSecSums(){ document.querySelectorAll('#qlist .qsection').forEach(function(sec){ var sum=0; qSecCards(sec).forEach(function(n){ if(n.classList.contains('qcard')) sum+=qCardPts(n); }); sec.querySelector('.qsec-sum').textContent=sum.toFixed(2).replace('.',','); });
+    var tot=0; document.querySelectorAll('#qlist .qcard').forEach(function(c){ tot+=qCardPts(c); }); window.__pts=tot; document.getElementById('sumpoints').textContent=tot.toFixed(2).replace('.',','); }
+  document.getElementById('qlist').addEventListener('input', function(e){ if(e.target.classList.contains('qmeta-input')) qSecSums(); });
   // Questions of a section are the siblings up to the next section header (incl. its page marker).
   function qSecCards(sec){ var r=[], n=sec.nextElementSibling; while(n && !n.classList.contains('qsection') && !(n.matches('.qpage-lbl,.qpb-ctl') && n.nextElementSibling && n.nextElementSibling.classList.contains('qsection'))){ r.push(n); n=n.nextElementSibling; } return r; }
   function toggleQSec(btn){ var sec=btn.closest('.qsection'), c=sec.classList.toggle('collapsed'), cards=qSecCards(sec), nq=cards.filter(function(n){ return n.classList.contains('qcard'); }).length;
@@ -2001,12 +2010,12 @@
       if(i===0 || br[i]){ page++; el=document.createElement('div'); el.className='qpage-lbl'; el.innerHTML='<span>Seite '+page+'</span><span class="line"></span>'+(man&&i>0?'<button type="button" class="qpb-btn" onclick="qPbToggle(this,false)"><i class="fa-solid fa-file-circle-minus me-1"></i>Seitenumbruch entfernen</button>':''); }
       else if(man){ el=document.createElement('div'); el.className='qpb-ctl'; el.innerHTML='<span class="line"></span><button type="button" class="qpb-btn" onclick="qPbToggle(this,true)"><i class="fa-solid fa-file-circle-plus me-1"></i>Seitenumbruch einfügen</button><span class="line"></span>'; }
       if(el){ if(hid && !isSec) el.classList.add('hidden'); list.insertBefore(el,n); }
-      if(isSec) hid=n.classList.contains('collapsed'); }); qSecAllSync(); }
+      if(isSec) hid=n.classList.contains('collapsed'); }); qSecAllSync(); qSecSums(); }
   function qPbToggle(btn,on){ btn.closest('.qpage-lbl,.qpb-ctl').nextElementSibling.dataset.pb=on?'1':''; qPagesRender(); }
   // Manual mode starts from the layout of the previously selected mode.
   function qPageSet(mode){ if(mode==='manual'){ var items=qItems(), br=qBreakFlags(items); items.forEach(function(n,i){ n.dataset.pb=br[i]?'1':''; }); } qPageMode=mode; qPagesRender(); }
   function removeSectionEl(el){ var sec=el.closest('.qsection'); qSecCards(sec).forEach(function(n){ n.classList.remove('hidden'); }); sec.remove(); qPagesRender(); }
-  function addSection(){ document.getElementById('qempty').classList.add('hidden'); var d=document.createElement('div'); d.className='qsection'; d.innerHTML='<div class="d-flex align-items-center gap-2">'+QSEC_TOG+'<input class="form-control form-control-sm fw-bold" style="max-width:360px" value="Neuer Abschnitt"><span class="qsec-n small text-muted text-nowrap hidden"></span><i class="fa-solid fa-ellipsis-vertical text-muted ms-auto"></i><i class="fa-solid fa-trash text-muted" style="cursor:pointer" onclick="removeSectionEl(this)"></i></div>'; document.getElementById('qlist').appendChild(d); qPagesRender(); toast('Abschnitt hinzugefügt'); }
+  function addSection(){ document.getElementById('qempty').classList.add('hidden'); var d=document.createElement('div'); d.className='qsection'; d.innerHTML='<div class="d-flex align-items-center gap-2">'+QSEC_TOG+'<input class="form-control form-control-sm fw-bold" style="max-width:360px" value="Neuer Abschnitt"><span class="qsec-n small text-muted text-nowrap hidden"></span>'+QSEC_PTS+'<i class="fa-solid fa-ellipsis-vertical text-muted"></i><i class="fa-solid fa-trash text-muted" style="cursor:pointer" onclick="removeSectionEl(this)"></i></div>'; document.getElementById('qlist').appendChild(d); qPagesRender(); toast('Abschnitt hinzugefügt'); }
 
   function toggleQFilter(){ var f=document.getElementById('qfilter'); var h=f.classList.toggle('hidden'); document.getElementById('qfChev').className='fa-solid '+(h?'fa-chevron-down':'fa-chevron-up'); }
   function qbCount(){ var n=document.querySelectorAll('#page-qbank tbody .qbchk:checked').length; var el=document.getElementById('qbSel'); if(el) el.textContent=n; }
@@ -2761,6 +2770,7 @@
       St('#page-activity .act-item a',1,['Test öffnen','Öffne einen bestehenden Test.'],['Open a quiz','Open an existing quiz.']),
       St('#page-preview .card-soft',0,['Übersicht','Zeitraum, Versuche und Bestehensgrenze auf einen Blick.'],['Overview','Time window, attempts and pass grade at a glance.']),
       St('#page-preview .acctab [onclick="showQuestions()"]',1,['Fragen','Öffne den Tab „Fragen“.'],['Questions','Open the “Questions” tab.']),
+      St('#qlist .qsec-pts',0,['Punkte je Abschnitt','Summe der Punkte aller Fragen im Abschnitt – ändert sich sofort, wenn du die Punkte einer Frage anpasst.'],['Points per section','Sum of the points of all questions in the section – updates as soon as you change a question’s points.']),
       St('#qlist .qsec-tog',1,['Abschnitt einklappen','Der Pfeil blendet die Fragen eines Abschnitts aus.'],['Collapse a section','The arrow hides the questions of a section.']),
       St('#qSecAllBtn',1,['Alle einklappen','Klappt alle Abschnitte auf einmal ein – der Link wechselt dann zu „Alle ausklappen“.'],['Collapse all','Collapses all sections at once – the link then switches to “Expand all”.']),
       St('#qSecAllBtn',1,['Alle ausklappen','Und wieder auf.'],['Expand all','And open them again.']),
