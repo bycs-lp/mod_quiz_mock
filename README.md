@@ -22,6 +22,15 @@ Links am Bildschirmrand befindet sich der Reiter **🌐**. Darüber lassen sich
 
 Standard ist **Englisch** und **Lehrer**.
 
+### Design wechseln (Moodle Boost ⇄ mebis)
+
+Der Reiter **🎨** über dem 🌐-Reiter schaltet zwischen **Moodle Boost** und dem **mebis-Design** der ByCS Lernplattform um. Alternativ gibt es im 🌐-Menü den Abschnitt *Design · Theme*.
+
+- Start ist immer **Moodle Boost**; die Wahl wird nicht gespeichert.
+- Direkt im mebis-Design öffnen: `?skin=mebis` an die Adresse anhängen, z. B. `https://bycs-lp.github.io/mod_quiz_mock/?skin=mebis`.
+- Deeplinks aus der Schnellauswahl übernehmen das gewählte Design: `#go-test-anlegen&lang=de&skin=mebis`.
+- Das mebis-Design ist noch vorläufig und wird durch die finale Fassung ersetzt.
+
 ### Rolle Lehrer
 
 | Was | Wo |
@@ -90,6 +99,15 @@ The **🌐** tab on the left edge of the screen lets you switch
 - the **role** (Student · Teacher · Admin).
 
 Defaults are **English** and **Teacher**.
+
+### Switching the theme (Moodle Boost ⇄ mebis)
+
+The **🎨** tab above the 🌐 tab switches between **Moodle Boost** and the **mebis theme** of the ByCS learning platform. The 🌐 menu also has a *Design · Theme* section.
+
+- The mock always starts in **Moodle Boost**; the choice is not saved.
+- Open directly in the mebis theme: append `?skin=mebis` to the address, e.g. `https://bycs-lp.github.io/mod_quiz_mock/?skin=mebis`.
+- Deep links from the quick access drawer keep the selected theme: `#go-test-anlegen&lang=de&skin=mebis`.
+- The mebis theme is still provisional and will be replaced by the final version.
 
 ### Teacher role
 
